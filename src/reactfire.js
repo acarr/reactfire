@@ -118,6 +118,24 @@
       _throwError(errorMessage);
     }
   }
+  
+  function _validateModel(model) {
+    var errorMessage;
+    
+    if ( !model ) {
+      return;
+    }
+    
+    if ( typeof model !== 'function' ) {
+      errorMessage = 'Model must be a function or class. Got: ' + model;
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      _throwError(errorMessage);
+    } else {
+      return model;
+    }
+  }
 
   /**
    * Creates a new record given a key-value pair.
@@ -152,6 +170,12 @@
     var key = _getKey(snapshot);
     var value = snapshot.val();
 
+    // If we're using the firebase model, cast
+    // the data as the set type
+    if ( this.firebaseModel ) {
+      value = new this.model(value);
+    }
+
     this.data[bindVar] = _createRecord(key, value);
 
     this.setState(this.data);
@@ -173,6 +197,12 @@
     var key = _getKey(snapshot);
     var value = snapshot.val();
     var array = this.data[bindVar];
+
+    // If we're using the firebase model, cast
+    // the data as the set type
+    if ( this.firebaseModel ) {
+      value = new this.model(value);
+    }
 
     // Determine where to insert the new record
     var insertionIndex;
@@ -323,6 +353,7 @@
       this.data = {};
       this.firebaseRefs = {};
       this.firebaseListeners = {};
+      this.firebaseModel = _validateModel(this.model);
     },
 
     /**
@@ -335,6 +366,7 @@
           this.unbind(bindVar);
         }
       }
+      this.firebaseModel = undefined;
     },
 
 
